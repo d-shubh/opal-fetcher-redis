@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+    # When scaling the opal-server to multiple nodes and/or multiple workers, we use
+  # a *broadcast* channel to sync between all the instances of opal-server.
+  # Under the hood, this channel is implemented by encode/broadcaster (see link below).
+  # At the moment, the broadcast channel can be either: postgresdb, redis or kafka.
+  # The format of the broadcaster URI string (the one we pass to opal server as `OPAL_BROADCAST_URI`) is specified here:
+  # https://github.com/encode/broadcaster#available-backends
+  broadcast_channel:
+    image: postgres:alpine
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+  redis_example:
+    image: redis:latest
+    environment:
+      - REDIS_PASSWORD=your_redis_password
+    ports:
+      - "6379:6379"
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    volumes:
+      - ./initialize_redis.sh:/initialize_redis.sh
+    # this script just pre-populate redis with some data for testing purposes
+    command: ["sh", "-c", "/initialize_redis.sh"]
+
+  opal_server:
+    image: permitio/opal-server:latest
+    environment:
+      - OPAL_BROADCAST_URI=postgres://postgres:postgres@broadcast_channel:5432/postgres
+      - UVICORN_NUM_WORKERS=4
+      - OPAL_POLICY_REPO_URL=https://github.com/permitio/opal-example-policy-repo
+      - OPAL_POLICY_REPO_POLLING_INTERVAL=30
+      - OPAL_DATA_CONFIG_SOURCES={"config":{"entries":[{"url":"redis://:your_redis_password@redis_example:6379","config":{"fetcher":"RedisFetchProvider","command":"KEYS *"},"topics":["policy_data"],"dst_path":"redis_data"}]}}
+    ports:
+      - "7002:7002"
+    depends_on:
+      - broadcast_channel
+ 
+  opal_client:
+    build:
+      context: .
+    environment:
+      - OPAL_SERVER_URL=http://opal_server:7002
+      - OPAL_FETCH_PROVIDER_MODULES=opal_common.fetcher.providers,opal_fetcher_redis.provider
+      - OPAL_INLINE_OPA_LOG_FORMAT=http
+    ports:
+      - "7766:7000"
+      - "8181:8181"
+    depends_on:
+      - opal_server
