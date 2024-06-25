@@ -1,5 +1,5 @@
 #!/bin/sh
-
+# Pre-populating redis data for testing
 redis-server --daemonize yes --appendonly yes --requirepass $REDIS_PASSWORD
 echo "Started Redis server..."
 
