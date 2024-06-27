@@ -22,6 +22,14 @@ docker compose up
 ```
 this docker compose configuration already correctly configures OPAL to load the Redis Fetch Provider, and correctly configures `OPAL_DATA_CONFIG_SOURCES` to include an entry that uses this fetcher.
 
+### 🚀 Installation:
+
+1. Clone this repo:
+```
+git clone https://github.com/d-shubh/opal-fetcher-redis.git
+```
+2. Create a docker file(an example docker file is provided).
+3. Build your docker file.
 
 ### 📖 About OPAL (Open Policy Administration Layer)
 [OPAL](https://github.com/permitio/opal) is an administration layer for Open Policy Agent (OPA), detecting changes to both policy and policy data in realtime and pushing live updates to your agents.
@@ -31,3 +39,8 @@ OPAL brings open-policy up to the speed needed by live applications. As your app
 Check out OPAL's main site at [OPAL.ac](https://opal.ac).
 
 <img src="https://i.ibb.co/CvmX8rR/simplified-diagram-highlight.png" alt="simplified" border="0">
+
+### 📜 License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+

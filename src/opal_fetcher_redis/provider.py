@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 from pydantic import Field
 from opal_common.fetcher.fetch_provider import BaseFetchProvider
 from opal_common.fetcher.events import FetcherConfig, FetchEvent
@@ -55,11 +55,33 @@ class RedisFetchProvider(BaseFetchProvider):
             return
 
         try:
-            logger.debug(f"{self.__class__.__name__} fetching from Redis with command: {self._event.config.command}")
-
+            logger.debug(f"{self.__class__.__name__} fetching from {self._event.url}")
             data = await self._connection.execute_command(*self._event.config.command.split())
             return data
 
         except Exception as e:
             logger.error(f"Failed to fetch data from Redis: {e}")
             return None
+
+    async def _process_(self, redis_data: Any) -> Any:
+        self._event: RedisFetchEvent
+
+        # handling byte data returned from redis commands
+        def decode_response(data: Any) -> Any:
+            if isinstance(data, bytes):
+                try:
+                    return data.decode('utf-8')
+                except UnicodeDecodeError:
+                    return repr(data)
+            elif isinstance(data, set):
+                return {decode_response(item) for item in data}
+            elif isinstance(data, tuple):
+                return tuple(decode_response(item) for item in data)
+            elif isinstance(data, list):
+                return [decode_response(item) for item in data]
+            elif isinstance(data, dict):
+                return {decode_response(k): decode_response(v) for k, v in data.items()}
+            else:
+                return data
+
+        return decode_response(redis_data)
