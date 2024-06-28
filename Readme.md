@@ -29,7 +29,7 @@ this docker compose configuration already correctly configures OPAL to load the 
 git clone https://github.com/d-shubh/opal-fetcher-redis.git
 ```
 2. Create a docker file(an example docker file is provided).
-3. Build your docker file.
+3. Build your docker image.
 
 ### 📖 About OPAL (Open Policy Administration Layer)
 [OPAL](https://github.com/permitio/opal) is an administration layer for Open Policy Agent (OPA), detecting changes to both policy and policy data in realtime and pushing live updates to your agents.
